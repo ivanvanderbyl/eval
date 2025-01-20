@@ -1,4 +1,4 @@
-# `eval`
+# `evaluate`
 
 An evaluation framework for LLMs written in Go.
 
@@ -14,7 +14,11 @@ An evaluation framework for LLMs written in Go.
 ## Installation
 
 ```bash
-go get github.com/ivanvanderbyl/eval
+# Install the command line tool
+go install github.com/ivanvanderbyl/evaluate/cmd/evaluate@latest
+
+# Or if you want to use it as a library
+go get github.com/ivanvanderbyl/evaluate
 ```
 
 ## Requirements
@@ -31,7 +35,7 @@ go get github.com/ivanvanderbyl/eval
 The framework includes a command-line tool for running evaluations:
 
 ```bash
-eval -api-key=your-api-key \
+evaluate -api-key=your-api-key \
      -input=input.json \
      -output=results.json \
      -template-dir=templates \
@@ -93,15 +97,15 @@ Results are output in JSON format:
 
 ```go
 import (
-    "github.com/ivanvanderbyl/eval/pkg/llm"
-    "github.com/ivanvanderbyl/eval/pkg/templates"
+    "github.com/ivanvanderbyl/evaluate/pkg/llm"
+    "github.com/ivanvanderbyl/evaluate/pkg/templates"
 )
 
 // Create OpenAI client
 client := llm.NewOpenAIClient(apiKey)
 
 // Create classifier
-classifier := llm.NewClassifier(client, "eval", "gpt-4", llm.LLMOptions{})
+classifier := llm.NewClassifier(client, "evaluate", "gpt-4", llm.LLMOptions{})
 
 // Load template
 manager := templates.NewManager()
