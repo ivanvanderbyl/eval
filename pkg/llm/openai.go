@@ -157,6 +157,10 @@ func (o *OpenAIProvider) Embedding(ctx context.Context, text string) ([]float64,
 		return nil, fmt.Errorf("model %s does not support embeddings", o.model.Name)
 	}
 
+	if text == "" {
+		return nil, fmt.Errorf("empty text provided")
+	}
+
 	req := openai.EmbeddingRequest{
 		Input: []string{text},
 		Model: openai.EmbeddingModel(o.model.Name),
