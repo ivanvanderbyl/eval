@@ -1,0 +1,77 @@
+version: '3'
+
+vars:
+  BINARY_NAME: eval
+  BUILD_DIR: build
+  COVERAGE_DIR: coverage
+
+tasks:
+  default:
+    cmds:
+      - task --list-all
+    silent: true
+
+  build:
+    desc: Build the evaluation tool
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/eval
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test -v ./...
+
+  coverage:
+    desc: Run tests with coverage
+    cmds:
+      - mkdir -p {{.COVERAGE_DIR}}
+      - go test -coverprofile={{.COVERAGE_DIR}}/coverage.out ./...
+      - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run ./...
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - rm -rf {{.COVERAGE_DIR}}
+
+  run:
+    desc: Run the evaluation tool
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} {{.CLI_ARGS}}
+
+  example:
+    desc: Run the evaluation tool with example input
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} -input examples/input.json -template-dir templates
+
+  deps:
+    desc: Install development dependencies
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go mod download
+
+  fmt:
+    desc: Format Go code
+    cmds:
+      - go fmt ./...
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  check:
+    desc: Run all checks (fmt, vet, lint, test)
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: lint
+      - task: test
