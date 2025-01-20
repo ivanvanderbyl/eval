@@ -13,11 +13,19 @@ type MockClient struct {
 	err      error
 }
 
-func (m *MockClient) Complete(ctx context.Context, messages []Message, tools []Tool, opts LLMOptions) (*Response, error) {
+func (m *MockClient) Name() string {
+	return "MockClient"
+}
+
+func (m *MockClient) Generate(ctx context.Context, messages []Message, tools []Tool, opts ...GenerateOption) (*Response, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
 	return m.response, nil
+}
+
+func (m *MockClient) Close() error {
+	return nil
 }
 
 func TestClassifier_Classify(t *testing.T) {
@@ -118,7 +126,7 @@ func TestClassifier_Classify(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := NewClassifier(tt.mock, "test", DefaultModel, LLMOptions{})
+			c := NewClassifier(tt.mock, "test", DefaultModel)
 			got, err := c.Classify(context.Background(), "Test prompt", choiceScores, tt.useCOT)
 
 			if (err != nil) != tt.wantErr {

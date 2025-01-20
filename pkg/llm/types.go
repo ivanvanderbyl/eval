@@ -1,29 +1,11 @@
 package llm
 
-import (
-	"context"
-)
-
 // Provider represents a language model provider (e.g., OpenAI, Gemini)
 type Provider interface {
 	// Name returns the provider's name
 	Name() string
 	// Close releases any resources used by the provider
 	Close() error
-}
-
-// TextGenerator represents a text generation model
-type TextGenerator interface {
-	Provider
-	// Generate generates text based on the prompt
-	Generate(ctx context.Context, prompt string, opts ...GenerateOption) (string, error)
-}
-
-// EmbeddingGenerator represents an embedding model
-type EmbeddingGenerator interface {
-	Provider
-	// GenerateEmbedding generates embeddings for the given text
-	GenerateEmbedding(ctx context.Context, text string, opts ...EmbeddingOption) ([]float64, error)
 }
 
 // Model represents a specific model configuration
@@ -47,6 +29,20 @@ const (
 	// ModelTypeBoth indicates the model can do both text and embeddings
 	ModelTypeBoth = ModelTypeText | ModelTypeEmbedding
 )
+
+// String returns a string representation of the model type
+func (m ModelType) String() string {
+	switch m {
+	case ModelTypeText:
+		return "text"
+	case ModelTypeEmbedding:
+		return "embedding"
+	case ModelTypeText | ModelTypeEmbedding:
+		return "text+embedding"
+	default:
+		return "unknown"
+	}
+}
 
 // GenerateOptions holds configuration for text generation
 type GenerateOptions struct {

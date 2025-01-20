@@ -7,10 +7,27 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-// OpenAIProvider implements both TextGenerator and EmbeddingGenerator interfaces
+// OpenAIProvider implements the Generator interface for OpenAI
 type OpenAIProvider struct {
 	client *openai.Client
 	model  Model
+}
+
+var OpenAIGPT4o = Model{
+	Name:      "gpt-4o",
+	MaxTokens: 8_192,
+	Type:      ModelTypeText,
+}
+
+var OpenAIGPT4oMini = Model{
+	Name:      "gpt-4o-mini",
+	MaxTokens: 8_192,
+	Type:      ModelTypeText,
+}
+
+var AllOpenAIModels = []Model{
+	OpenAIGPT4o,
+	OpenAIGPT4oMini,
 }
 
 // NewOpenAIProvider creates a new OpenAIProvider
@@ -27,10 +44,14 @@ func (o *OpenAIProvider) Name() string {
 	return "OpenAI"
 }
 
-// Complete implements the Client interface
-func (o *OpenAIProvider) Complete(ctx context.Context, messages []Message, tools []Tool, opts LLMOptions) (*Response, error) {
+// Generate implements the Generator interface
+func (o *OpenAIProvider) Generate(ctx context.Context, messages []Message, tools []Tool, opts ...GenerateOption) (*Response, error) {
 	if o.model.Type&ModelTypeText == 0 {
 		return nil, fmt.Errorf("model %s does not support text generation", o.model.Name)
+	}
+
+	if len(messages) == 0 {
+		return nil, fmt.Errorf("no messages provided")
 	}
 
 	// Convert messages to OpenAI format
@@ -40,6 +61,11 @@ func (o *OpenAIProvider) Complete(ctx context.Context, messages []Message, tools
 			Role:    msg.Role,
 			Content: msg.Content,
 		}
+	}
+
+	options := GenerateOptions{}
+	for _, opt := range opts {
+		opt(&options)
 	}
 
 	// Convert tools to OpenAI format
@@ -65,11 +91,25 @@ func (o *OpenAIProvider) Complete(ctx context.Context, messages []Message, tools
 		Tools:    oaiTools,
 	}
 
-	if opts.MaxTokens != nil {
-		req.MaxTokens = *opts.MaxTokens
+	if options.MaxTokens != 0 {
+		req.MaxTokens = options.MaxTokens
+	} else {
+		req.MaxTokens = o.model.MaxTokens
 	}
-	if opts.Temperature != nil {
-		req.Temperature = float32(*opts.Temperature)
+	if options.Temperature != 0 {
+		req.Temperature = float32(options.Temperature)
+	}
+
+	if options.TopP != 0 {
+		req.TopP = float32(options.TopP)
+	}
+
+	if options.PresencePenalty != 0 {
+		req.PresencePenalty = float32(options.PresencePenalty)
+	}
+
+	if options.FrequencyPenalty != 0 {
+		req.FrequencyPenalty = float32(options.FrequencyPenalty)
 	}
 
 	// Make request
@@ -111,61 +151,15 @@ func (o *OpenAIProvider) Complete(ctx context.Context, messages []Message, tools
 	}, nil
 }
 
-// Generate implements the TextGenerator interface
-func (o *OpenAIProvider) Generate(ctx context.Context, prompt string, opts ...GenerateOption) (string, error) {
-	if o.model.Type&ModelTypeText == 0 {
-		return "", fmt.Errorf("model %s does not support text generation", o.model.Name)
-	}
-
-	// Apply options
-	options := &GenerateOptions{
-		Model:       o.model.Name,
-		Temperature: 0.7,
-		MaxTokens:   o.model.MaxTokens,
-	}
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	req := openai.CompletionRequest{
-		Model:            options.Model,
-		Prompt:           prompt,
-		Temperature:      float32(options.Temperature),
-		MaxTokens:        options.MaxTokens,
-		TopP:             float32(options.TopP),
-		FrequencyPenalty: float32(options.FrequencyPenalty),
-		PresencePenalty:  float32(options.PresencePenalty),
-	}
-
-	resp, err := o.client.CreateCompletion(ctx, req)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate completion: %w", err)
-	}
-
-	if len(resp.Choices) == 0 {
-		return "", fmt.Errorf("no completion choices returned")
-	}
-
-	return resp.Choices[0].Text, nil
-}
-
-// GenerateEmbedding implements the EmbeddingGenerator interface
-func (o *OpenAIProvider) GenerateEmbedding(ctx context.Context, text string, opts ...EmbeddingOption) ([]float64, error) {
+// Embedding implements the Embedder interface
+func (o *OpenAIProvider) Embedding(ctx context.Context, text string) ([]float64, error) {
 	if o.model.Type&ModelTypeEmbedding == 0 {
 		return nil, fmt.Errorf("model %s does not support embeddings", o.model.Name)
 	}
 
-	// Apply options
-	options := &EmbeddingOptions{
-		Model: o.model.Name,
-	}
-	for _, opt := range opts {
-		opt(options)
-	}
-
 	req := openai.EmbeddingRequest{
 		Input: []string{text},
-		Model: openai.EmbeddingModel(options.Model),
+		Model: openai.EmbeddingModel(o.model.Name),
 	}
 
 	resp, err := o.client.CreateEmbeddings(ctx, req)

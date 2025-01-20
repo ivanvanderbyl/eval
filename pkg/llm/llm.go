@@ -8,16 +8,11 @@ import (
 )
 
 const (
-	DefaultModel = "gpt-4"
-	NoCOTSuffix  = "Answer the question by calling `select_choice` with a single choice from {{.Choices}}."
-	COTSuffix    = "Answer the question by calling `select_choice` with your reasoning in a step-by-step manner to be sure that your conclusion is correct. Avoid simply stating the correct answer at the outset. Select a single choice by setting the `choice` parameter to a single choice from {{.Choices}}."
+	NoCOTSuffix = "Answer the question by calling `select_choice` with a single choice from {{.Choices}}."
+	COTSuffix   = "Answer the question by calling `select_choice` with your reasoning in a step-by-step manner to be sure that your conclusion is correct. Avoid simply stating the correct answer at the outset. Select a single choice by setting the `choice` parameter to a single choice from {{.Choices}}."
 )
 
-// LLMOptions contains configuration options for LLM calls
-type LLMOptions struct {
-	MaxTokens   *int     `json:"max_tokens,omitempty"`
-	Temperature *float64 `json:"temperature,omitempty"`
-}
+var DefaultModel = Gemini15Flash
 
 // Message represents a chat message
 type Message struct {
@@ -70,25 +65,32 @@ type Score struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// Client defines the interface for LLM interactions
-type Client interface {
-	Complete(ctx context.Context, messages []Message, tools []Tool, opts LLMOptions) (*Response, error)
+// Generator defines the interface for generating text and completing chat messages
+type Generator interface {
+	Provider
+	Generate(ctx context.Context, messages []Message, tools []Tool, opts ...GenerateOption) (*Response, error)
+}
+
+// Embedder defines the interface for generating embeddings
+type Embedder interface {
+	Provider
+	Embedding(ctx context.Context, text string) ([]float64, error)
 }
 
 // Classifier handles classification tasks using an LLM
 type Classifier struct {
-	client Client
+	client Generator
 	name   string
 	model  string
-	opts   LLMOptions
+	opts   []GenerateOption
 }
 
 // NewClassifier creates a new classifier instance
-func NewClassifier(client Client, name, model string, opts LLMOptions) *Classifier {
+func NewClassifier(client Generator, name string, model Model, opts ...GenerateOption) *Classifier {
 	return &Classifier{
 		client: client,
 		name:   name,
-		model:  model,
+		model:  model.Name,
 		opts:   opts,
 	}
 }
@@ -206,7 +208,7 @@ func (c *Classifier) Classify(ctx context.Context, prompt string, choiceScores m
 	}
 
 	tools := buildClassificationTools(useCOT, choices)
-	resp, err := c.client.Complete(ctx, messages, tools, c.opts)
+	resp, err := c.client.Generate(ctx, messages, tools, c.opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to complete: %w", err)
 	}
