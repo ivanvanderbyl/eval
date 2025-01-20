@@ -14,12 +14,12 @@ import (
 // ContextEntityRecall estimates context recall by estimating TP and FN using annotated answer and retrieved context
 type ContextEntityRecall struct {
 	templateManager *templates.RagasManager
-	llmClient       llm.Client
+	llmClient       llm.Generator
 	scorer          types.Scorer
 }
 
 // NewContextEntityRecall creates a new ContextEntityRecall metric
-func NewContextEntityRecall(manager *templates.RagasManager, client llm.Client) *ContextEntityRecall {
+func NewContextEntityRecall(manager *templates.RagasManager, client llm.Generator) *ContextEntityRecall {
 	return &ContextEntityRecall{
 		templateManager: manager,
 		llmClient:       client,
@@ -77,18 +77,18 @@ func (c *ContextEntityRecall) extractEntities(ctx context.Context, text string, 
 	prompt = strings.Replace(prompt, "{{.Text}}", text, -1)
 
 	// Call LLM
-	opts := llm.LLMOptions{}
+	opts := []llm.GenerateOption{}
 	if template.Temperature != nil {
 		temp := *template.Temperature
-		opts.Temperature = &temp
+		opts = append(opts, llm.WithTemperature(temp))
 	}
 
-	resp, err := c.llmClient.Complete(ctx, []llm.Message{
+	resp, err := c.llmClient.Generate(ctx, []llm.Message{
 		{
 			Role:    "user",
 			Content: prompt,
 		},
-	}, nil, opts)
+	}, nil, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate content: %w", err)
 	}
