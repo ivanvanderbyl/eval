@@ -1,0 +1,68 @@
+[
+  {
+    "template": "json_match",
+    "data": {
+      "expected": {
+        "user": {
+          "id": 123,
+          "name": "John Doe",
+          "email": "john@example.com",
+          "preferences": {
+            "theme": "dark",
+            "notifications": true
+          }
+        }
+      },
+      "response": {
+        "user": {
+          "id": 123,
+          "name": "John Doe",
+          "email": "john@example.com",
+          "preferences": {
+            "theme": "dark",
+            "notifications": true
+          }
+        }
+      }
+    }
+  },
+  {
+    "template": "json_match",
+    "data": {
+      "expected": {
+        "items": [
+          {"id": 1, "name": "Item 1"},
+          {"id": 2, "name": "Item 2"},
+          {"id": 3, "name": "Item 3"}
+        ]
+      },
+      "response": {
+        "items": [
+          {"id": 3, "name": "Item 3"},
+          {"id": 1, "name": "Item 1"},
+          {"id": 2, "name": "Item 2"}
+        ]
+      }
+    }
+  },
+  {
+    "template": "json_match",
+    "data": {
+      "expected": {
+        "product": {
+          "id": "abc123",
+          "price": 19.99,
+          "stock": 100
+        }
+      },
+      "response": {
+        "product": {
+          "id": "abc123",
+          "price": 20.00,
+          "stock": 100,
+          "extra": "field"
+        }
+      }
+    }
+  }
+]

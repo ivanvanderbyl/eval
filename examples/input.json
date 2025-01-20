@@ -1,0 +1,23 @@
+[
+  {
+    "template": "factuality",
+    "data": {
+      "context": "The Great Wall of China is an ancient series of walls and fortifications located in northern China, built around 500 years ago. The Great Wall is over 13,000 miles long.",
+      "response": "The Great Wall of China is one of the most impressive architectural feats in human history. It stretches for approximately 13,171 miles through northern China. Construction of the current wall began during the Ming Dynasty, roughly 500 years ago, though earlier walls date back much further."
+    }
+  },
+  {
+    "template": "factuality",
+    "data": {
+      "context": "The first successful powered, controlled, and sustained flight was achieved by the Wright brothers on December 17, 1903, near Kitty Hawk, North Carolina.",
+      "response": "The Wright brothers made their historic first flight in 1902 in Ohio, where they demonstrated the first powered aircraft."
+    }
+  },
+  {
+    "template": "factuality",
+    "data": {
+      "context": "Mount Everest is Earth's highest mountain above sea level, with a peak at 29,029 feet (8,848 meters). It is located in the Mahalangur Himal sub-range of the Himalayas.",
+      "response": "Mount Everest, situated in the Himalayas, stands as the world's tallest peak at approximately 29,029 feet above sea level. It is part of the Mahalangur Himal range."
+    }
+  }
+]

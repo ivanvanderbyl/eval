@@ -1,0 +1,37 @@
+[
+  {
+    "template": "string_match",
+    "data": {
+      "expected": "The quick brown fox jumps over the lazy dog.",
+      "response": "The quick brown fox jumps over the lazy dog."
+    }
+  },
+  {
+    "template": "string_match",
+    "data": {
+      "expected": "The quick brown fox jumps over the lazy dog.",
+      "response": "A quick brown fox jumped over a lazy dog."
+    }
+  },
+  {
+    "template": "string_match",
+    "data": {
+      "expected": "The quick brown fox jumps over the lazy dog.",
+      "response": "A fast orange cat runs past the sleeping canine."
+    }
+  },
+  {
+    "template": "string_match",
+    "data": {
+      "expected": "The Earth is the third planet from the Sun in our solar system.",
+      "response": "Earth is the third planet from the Sun in the Solar System."
+    }
+  },
+  {
+    "template": "string_match",
+    "data": {
+      "expected": "The Earth is the third planet from the Sun in our solar system.",
+      "response": "Mars is the fourth planet from the Sun in the Solar System."
+    }
+  }
+]
