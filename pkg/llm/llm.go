@@ -81,16 +81,14 @@ type Embedder interface {
 type Classifier struct {
 	client Generator
 	name   string
-	model  string
 	opts   []GenerateOption
 }
 
 // NewClassifier creates a new classifier instance
-func NewClassifier(client Generator, name string, model Model, opts ...GenerateOption) *Classifier {
+func NewClassifier(client Generator, name string, opts ...GenerateOption) *Classifier {
 	return &Classifier{
 		client: client,
 		name:   name,
-		model:  model.Name,
 		opts:   opts,
 	}
 }

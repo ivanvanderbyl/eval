@@ -56,7 +56,7 @@ func NewProviderFactory(openAIKey, geminiKey string) *ProviderFactory {
 }
 
 // CreateProvider creates a provider from a provider:model string
-func (f *ProviderFactory) CreateProvider(modelSpec string) (Provider, error) {
+func (f *ProviderFactory) CreateProvider(modelSpec string) (Generator, error) {
 	parts := strings.Split(modelSpec, ":")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid model spec format, expected provider:model, got %s", modelSpec)

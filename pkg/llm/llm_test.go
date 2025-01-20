@@ -126,7 +126,7 @@ func TestClassifier_Classify(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := NewClassifier(tt.mock, "test", DefaultModel)
+			c := NewClassifier(tt.mock, "test")
 			got, err := c.Classify(context.Background(), "Test prompt", choiceScores, tt.useCOT)
 
 			if (err != nil) != tt.wantErr {

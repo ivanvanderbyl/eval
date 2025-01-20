@@ -128,7 +128,7 @@ func runEvaluation(c *cli.Context) error {
 	}
 
 	// Create classifier
-	classifier := llm.NewClassifier(provider.(llm.Client), "evaluate", modelSpec, llm.LLMOptions{})
+	classifier := llm.NewClassifier(provider, "evaluate")
 
 	// Load input data
 	input, err := loadInput(c.String("input"))
