@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ivanvanderbyl/eval/pkg/llm"
-	"github.com/ivanvanderbyl/eval/pkg/templates"
-	"github.com/ivanvanderbyl/eval/pkg/types"
+	"github.com/ivanvanderbyl/evalulate/pkg/llm"
+	"github.com/ivanvanderbyl/evalulate/pkg/templates"
+	"github.com/ivanvanderbyl/evalulate/pkg/types"
 )
 
 // ContextEntityRecall estimates context recall by estimating TP and FN using annotated answer and retrieved context

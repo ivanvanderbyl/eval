@@ -1,4 +1,4 @@
-module github.com/ivanvanderbyl/eval
+module github.com/ivanvanderbyl/evalulate
 
 go 1.23.3
 

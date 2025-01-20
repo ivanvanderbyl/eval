@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ivanvanderbyl/eval/pkg/llm"
-	"github.com/ivanvanderbyl/eval/pkg/templates"
+	"github.com/ivanvanderbyl/evalulate/pkg/llm"
+	"github.com/ivanvanderbyl/evalulate/pkg/templates"
 )
 
 func main() {
