@@ -32,16 +32,49 @@ go get github.com/ivanvanderbyl/evaluate
 
 ### Command Line Tool
 
-The framework includes a command-line tool for running evaluations:
+The framework includes a command-line tool for running evaluations with support for multiple LLM providers:
 
 ```bash
-evaluate -api-key=your-api-key \
-     -input=input.json \
-     -output=results.json \
-     -template-dir=templates \
-     -model=gpt-4 \
-     -use-cot=true
+# Run evaluations using OpenAI
+evaluate run --openai-key=your-openai-key \
+            --model=openai:gpt-4 \
+            --input=input.json \
+            --output=results.json \
+            --template-dir=templates \
+            --use-cot=true
+
+# Run evaluations using Gemini
+evaluate run --gemini-key=your-gemini-key \
+            --model=gemini:gemini-pro \
+            --input=input.json \
+            --output=results.json
+
+# List available models for a provider
+evaluate models list --provider=openai
+evaluate models ls --provider=gemini  # Using alias
+
+# Environment variables are also supported for API keys:
+export OPENAI_API_KEY=your-openai-key
+export GEMINI_API_KEY=your-gemini-key
+evaluate run --model=openai:gpt-4 --input=input.json
+
+# Show help for a command
+evaluate help run
+evaluate help models
 ```
+
+The tool supports the following providers and models:
+
+**OpenAI Models:**
+- `openai:gpt-4o-mini` - Fast and reasonably accurate
+- `openai:gpt-4o` - Most capable model
+- `openai:text-embedding-ada-002` - For embeddings
+
+**Gemini Models:**
+- `gemini:gemini-1.5-pro` - Slow but more accurate
+- `gemini:gemini-1.5-flash` - Fast and reasonably accurate
+- `gemini:gemini-2.0-flash` - Fast and very accurate
+- `gemini:embedding-001` - For embeddings
 
 ### Template Format
 

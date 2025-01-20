@@ -3,59 +3,137 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ivanvanderbyl/evalulate/pkg/llm"
 	"github.com/ivanvanderbyl/evalulate/pkg/templates"
+	"github.com/urfave/cli/v2"
 )
 
-func main() {
-	var (
-		apiKey      = flag.String("api-key", os.Getenv("OPENAI_API_KEY"), "OpenAI API key")
-		model       = flag.String("model", llm.DefaultModel, "Model to use for evaluation")
-		templateDir = flag.String("template-dir", "templates", "Directory containing evaluation templates")
-		inputFile   = flag.String("input", "", "Input file containing data to evaluate")
-		outputFile  = flag.String("output", "", "Output file for evaluation results")
-		useCOT      = flag.Bool("use-cot", true, "Use chain-of-thought reasoning")
-	)
-	flag.Parse()
+var commonFlags = []cli.Flag{
+	&cli.StringFlag{
+		Name:    "openai-key",
+		Usage:   "OpenAI API key",
+		EnvVars: []string{"OPENAI_API_KEY"},
+	},
+	&cli.StringFlag{
+		Name:    "gemini-key",
+		Usage:   "Gemini API key",
+		EnvVars: []string{"GEMINI_API_KEY"},
+	},
+}
 
-	if *apiKey == "" {
-		log.Fatal("OpenAI API key is required")
+func main() {
+	app := &cli.App{
+		Name:  "evaluate",
+		Usage: "An evaluation framework for LLMs",
+		Commands: []*cli.Command{
+			{
+				Name:    "run",
+				Aliases: []string{"r"},
+				Usage:   "Run evaluations using the specified model",
+				Flags: append([]cli.Flag{
+					&cli.StringFlag{
+						Name:  "model",
+						Usage: "Model to use for evaluation (format: provider:model, e.g., openai:gpt-4 or gemini:gemini-pro)",
+						Value: "openai:gpt-4",
+					},
+					&cli.StringFlag{
+						Name:  "template-dir",
+						Usage: "Directory containing evaluation templates",
+						Value: "templates",
+					},
+					&cli.StringFlag{
+						Name:     "input",
+						Usage:    "Input file containing data to evaluate",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "output",
+						Usage: "Output file for evaluation results",
+					},
+					&cli.BoolFlag{
+						Name:  "use-cot",
+						Usage: "Use chain-of-thought reasoning",
+						Value: true,
+					},
+				}, commonFlags...),
+				Action: runEvaluation,
+			},
+			{
+				Name:  "models",
+				Usage: "Model management commands",
+				Subcommands: []*cli.Command{
+					{
+						Name:    "list",
+						Aliases: []string{"ls"},
+						Usage:   "List available models for a provider",
+						Flags: append([]cli.Flag{
+							&cli.StringFlag{
+								Name:     "provider",
+								Usage:    "Provider to list models for (openai or gemini)",
+								Required: true,
+							},
+						}, commonFlags...),
+						Action: listModels,
+					},
+				},
+			},
+		},
 	}
 
-	if *inputFile == "" {
-		log.Fatal("Input file is required")
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func listModels(c *cli.Context) error {
+	provider := c.String("provider")
+	factory := llm.NewProviderFactory(
+		c.String("openai-key"),
+		c.String("gemini-key"),
+	)
+	models := factory.GetSupportedModels()
+	fmt.Printf("Available models for %s:\n", provider)
+	for _, model := range models {
+		if strings.HasPrefix(model, provider+":") {
+			fmt.Printf("  %s\n", model)
+		}
+	}
+	return nil
+}
+
+func runEvaluation(c *cli.Context) error {
+	// Create provider factory
+	factory := llm.NewProviderFactory(
+		c.String("openai-key"),
+		c.String("gemini-key"),
+	)
+
+	// Create provider based on model specification
+	modelSpec := c.String("model")
+	provider, err := factory.CreateProvider(modelSpec)
+	if err != nil {
+		return fmt.Errorf("failed to create provider: %w", err)
 	}
 
 	// Load templates
 	templateManager := templates.NewManager()
-	err := loadTemplates(templateManager, *templateDir)
-	if err != nil {
-		log.Fatalf("Failed to load templates: %v", err)
-	}
-
-	// Create OpenAI client
-	provider, err := llm.NewOpenAIProvider(*apiKey, llm.Model{
-		Name:      *model,
-		Type:      llm.ModelTypeText,
-		MaxTokens: 2048,
-	})
-	if err != nil {
-		log.Fatalf("Failed to create OpenAI provider: %v", err)
+	if err := loadTemplates(templateManager, c.String("template-dir")); err != nil {
+		return fmt.Errorf("failed to load templates: %w", err)
 	}
 
 	// Create classifier
-	classifier := llm.NewClassifier(provider, "eval", *model, llm.LLMOptions{})
+	classifier := llm.NewClassifier(provider.(llm.Client), "evaluate", modelSpec, llm.LLMOptions{})
 
 	// Load input data
-	input, err := loadInput(*inputFile)
+	input, err := loadInput(c.String("input"))
 	if err != nil {
-		log.Fatalf("Failed to load input: %v", err)
+		return fmt.Errorf("failed to load input: %w", err)
 	}
 
 	// Run evaluations
@@ -67,7 +145,7 @@ func main() {
 			continue
 		}
 
-		score, err := classifier.Classify(context.Background(), template.Prompt, template.ChoiceScores, *useCOT)
+		score, err := classifier.Classify(context.Background(), template.Prompt, template.ChoiceScores, c.Bool("use-cot"))
 		if err != nil {
 			log.Printf("Warning: failed to evaluate item: %v", err)
 			continue
@@ -77,18 +155,21 @@ func main() {
 	}
 
 	// Write results
-	if *outputFile != "" {
-		if err := writeResults(*outputFile, results); err != nil {
-			log.Fatalf("Failed to write results: %v", err)
+	outputFile := c.String("output")
+	if outputFile != "" {
+		if err := writeResults(outputFile, results); err != nil {
+			return fmt.Errorf("failed to write results: %w", err)
 		}
 	} else {
 		// Print results to stdout
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
 		if err := encoder.Encode(results); err != nil {
-			log.Fatalf("Failed to encode results: %v", err)
+			return fmt.Errorf("failed to encode results: %w", err)
 		}
 	}
+
+	return nil
 }
 
 type InputItem struct {
