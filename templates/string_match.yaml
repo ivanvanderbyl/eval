@@ -1,0 +1,17 @@
+name: string_match
+description: Compare two strings for similarity
+prompt: |
+  Compare the following two strings and select the most appropriate choice based on their similarity:
+
+  Expected: {{.expected}}
+  Response: {{.response}}
+
+  Choices:
+  - exact: The strings are identical or differ only in minor formatting (e.g., capitalization, punctuation)
+  - similar: The strings convey the same meaning but use different wording
+  - different: The strings convey different meanings
+
+choice_scores:
+  exact: 1.0
+  similar: 0.7
+  different: 0.0

@@ -1,0 +1,26 @@
+prompt: |
+  You are evaluating the factual accuracy of a response given some context.
+
+  Context:
+  {{.Data.context}}
+
+  Response to evaluate:
+  {{.Data.response}}
+
+  Rate the factual accuracy of the response:
+  1: Completely incorrect or contradicts the context
+  2: Mostly incorrect with some accurate elements
+  3: Partially correct with some inaccuracies
+  4: Mostly correct with minor inaccuracies
+  5: Completely accurate and fully supported by the context
+
+choice_scores:
+  "1": 0.0
+  "2": 0.25
+  "3": 0.5
+  "4": 0.75
+  "5": 1.0
+
+model: "gpt-4"
+use_cot: true
+temperature: 0.7
